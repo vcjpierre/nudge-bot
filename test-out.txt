@@ -1,0 +1,307 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/jpvc/Desktop/bot-wpp[39m
+
+ [31m❯[39m tests/handler.test.ts [2m([22m[2m18 tests[22m[2m | [22m[31m15 failed[39m[2m)[22m[32m 85[2mms[22m[39m
+   [31m❯[39m CommandHandler E2E [2m(18)[22m
+     [32m✓[39m ignora mensajes que no son comandos[32m 8[2mms[22m[39m
+     [32m✓[39m ignora mensajes propios del bot[32m 4[2mms[22m[39m
+     [32m✓[39m ignora en silencio comandos de grupos no autorizados[32m 4[2mms[22m[39m
+[31m     [31m×[31m /recordatorio crea y confirma con reacción ✅[39m[32m 12[2mms[22m[39m
+[31m     [31m×[31m alias /r funciona[39m[32m 5[2mms[22m[39m
+[31m     [31m×[31m fecha inválida responde con hint y reacción ❌[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m /recordatorios lista los pendientes[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m /eliminar requiere admin; un miembro recibe 🚫[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m /eliminar como admin cancela el recordatorio[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m /autorizar-grupo solo lo puede el owner, no un admin[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m /ayuda no muestra comandos BOT_OWNER a miembros ni admins[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m /ayuda al owner muestra todos los comandos[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m /mijid responde el JID del remitente[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m /config zona cambia la zona horaria del grupo (admin)[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m el mismo messageId no se procesa dos veces (idempotencia)[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m comando desconocido responde con ayuda[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m un error interno del comando reacciona ❌ y no rompe el handler[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m cuenta métricas de comandos procesados y fallidos[39m[32m 3[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 15 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/recordatorio crea y confirma con reacción ✅
+[31m[1mAssertionError[22m: expected [] to have a length of 1 but got +0[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m108:21[22m[39m
+    [90m106|[39m     await handler.handleMessage(msg('/recordatorio mañana 10:00 Compra…
+    [90m107|[39m     const pending = reminders.listPendingByGroup(GROUP);
+    [90m108|[39m     expect(pending).toHaveLength(1);
+    [90m   |[39m                     [31m^[39m
+    [90m109|[39m     expect(pending[0]?.message).toBe('Comprar pan');
+    [90m110|[39m     expect(lastReply()).toContain('Recordatorio #1 guardado');
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22malias /r funciona
+[31m[1mAssertionError[22m: expected [] to have a length of 1 but got +0[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m116:49[22m[39m
+    [90m114|[39m   it('alias /r funciona', async () => {
+    [90m115|[39m     await handler.handleMessage(msg('/r mañana 10:00 Corto', MEMBER));
+    [90m116|[39m     expect(reminders.listPendingByGroup(GROUP)).toHaveLength(1);
+    [90m   |[39m                                                 [31m^[39m
+    [90m117|[39m   });
+    [90m118|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22mfecha inválida responde con hint y reacción ❌
+[31m[1mAssertionError[22m: expected '' to contain '🕐 Ahora son las'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 🕐 Ahora son las[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m121:25[22m[39m
+    [90m119|[39m   it('fecha inválida responde con hint y reacción ❌', async () => {
+    [90m120|[39m     await handler.handleMessage(msg('/recordatorio ayer 10:00 X', MEMB…
+    [90m121|[39m     expect(lastReply()).toContain('🕐 Ahora son las');
+    [90m   |[39m                         [31m^[39m
+    [90m122|[39m     expect(lastReaction()).toBe('❌');
+    [90m123|[39m     expect(reminders.listPendingByGroup(GROUP)).toHaveLength(0);
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/recordatorios lista los pendientes
+[31m[1mAssertionError[22m: expected '' to contain 'Pan'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Pan[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m129:25[22m[39m
+    [90m127|[39m     await handler.handleMessage(msg('/recordatorio mañana 10:00 Pan', …
+    [90m128|[39m     await handler.handleMessage(msg('/recordatorios', MEMBER));
+    [90m129|[39m     expect(lastReply()).toContain('Pan');
+    [90m   |[39m                         [31m^[39m
+    [90m130|[39m   });
+    [90m131|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/eliminar requiere admin; un miembro recibe 🚫
+[31m[1mAssertionError[22m: expected '' to contain '🚫'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 🚫[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m135:25[22m[39m
+    [90m133|[39m     await handler.handleMessage(msg('/recordatorio mañana 10:00 Pan', …
+    [90m134|[39m     await handler.handleMessage(msg('/eliminar 1', MEMBER));
+    [90m135|[39m     expect(lastReply()).toContain('🚫');
+    [90m   |[39m                         [31m^[39m
+    [90m136|[39m     expect(reminders.listPendingByGroup(GROUP)).toHaveLength(1);
+    [90m137|[39m   });
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/eliminar como admin cancela el recordatorio
+[31m[1mAssertionError[22m: expected '' to contain 'cancelado'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- cancelado[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m142:25[22m[39m
+    [90m140|[39m     await handler.handleMessage(msg('/recordatorio mañana 10:00 Pan', …
+    [90m141|[39m     await handler.handleMessage(msg('/eliminar 1', ADMIN));
+    [90m142|[39m     expect(lastReply()).toContain('cancelado');
+    [90m   |[39m                         [31m^[39m
+    [90m143|[39m     expect(reminders.listPendingByGroup(GROUP)).toHaveLength(0);
+    [90m144|[39m   });
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/autorizar-grupo solo lo puede el owner, no un admin
+[31m[1mAssertionError[22m: expected '' to contain '🚫'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 🚫[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m150:25[22m[39m
+    [90m148|[39m     await handler.handleMessage(msg('/autorizar-grupo', ADMIN));
+    [90m149|[39m     expect(groups.isAuthorized(GROUP)).toBe(false);
+    [90m150|[39m     expect(lastReply()).toContain('🚫');
+    [90m   |[39m                         [31m^[39m
+    [90m151|[39m
+    [90m152|[39m     await handler.handleMessage(msg('/autorizar-grupo', OWNER));
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/ayuda no muestra comandos BOT_OWNER a miembros ni admins
+[31m[1mAssertionError[22m: expected '' to contain '/eliminar'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- /eliminar[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m161:25[22m[39m
+    [90m159|[39m     await handler.handleMessage(msg('/ayuda', ADMIN));
+    [90m160|[39m     expect(lastReply()).not.toContain('autorizar-grupo');
+    [90m161|[39m     expect(lastReply()).toContain('/eliminar'); // admin sí ve comando…
+    [90m   |[39m                         [31m^[39m
+    [90m162|[39m   });
+    [90m163|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/ayuda al owner muestra todos los comandos
+[31m[1mAssertionError[22m: expected '' to contain 'autorizar-grupo'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- autorizar-grupo[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m166:25[22m[39m
+    [90m164|[39m   it('/ayuda al owner muestra todos los comandos', async () => {
+    [90m165|[39m     await handler.handleMessage(msg('/ayuda', OWNER));
+    [90m166|[39m     expect(lastReply()).toContain('autorizar-grupo');
+    [90m   |[39m                         [31m^[39m
+    [90m167|[39m   });
+    [90m168|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/mijid responde el JID del remitente
+[31m[1mAssertionError[22m: expected '' to contain '59122222222@s.whatsapp.net'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 59122222222@s.whatsapp.net[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m171:25[22m[39m
+    [90m169|[39m   it('/mijid responde el JID del remitente', async () => {
+    [90m170|[39m     await handler.handleMessage(msg('/mijid', MEMBER));
+    [90m171|[39m     expect(lastReply()).toContain(MEMBER);
+    [90m   |[39m                         [31m^[39m
+    [90m172|[39m   });
+    [90m173|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22m/config zona cambia la zona horaria del grupo (admin)
+[31m[1mAssertionError[22m: expected null to be 'America/Buenos_Aires' // Object.is equality[39m
+
+[32m- Expected:[39m
+"America/Buenos_Aires"
+
+[31m+ Received:[39m
+null
+
+[36m [2m❯[22m tests/handler.test.ts:[2m176:39[22m[39m
+    [90m174|[39m   it('/config zona cambia la zona horaria del grupo (admin)', async ()…
+    [90m175|[39m     await handler.handleMessage(msg('/config zona America/Buenos_Aires…
+    [90m176|[39m     expect(groups.getTimezone(GROUP)).toBe('America/Buenos_Aires');
+    [90m   |[39m                                       [31m^[39m
+    [90m177|[39m     // Nuevos recordatorios usan la zona del grupo (UTC-3: 10:00 → 13:…
+    [90m178|[39m     await handler.handleMessage(msg('/recordatorio mañana 10:00 En otr…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22mel mismo messageId no se procesa dos veces (idempotencia)
+[31m[1mAssertionError[22m: expected [] to have a length of 1 but got +0[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m189:49[22m[39m
+    [90m187|[39m     await handler.handleMessage(m);
+    [90m188|[39m     await handler.handleMessage(m);
+    [90m189|[39m     expect(reminders.listPendingByGroup(GROUP)).toHaveLength(1);
+    [90m   |[39m                                                 [31m^[39m
+    [90m190|[39m   });
+    [90m191|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22mcomando desconocido responde con ayuda
+[31m[1mAssertionError[22m: expected '' to contain 'Comando desconocido'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Comando desconocido[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m194:25[22m[39m
+    [90m192|[39m   it('comando desconocido responde con ayuda', async () => {
+    [90m193|[39m     await handler.handleMessage(msg('/volar alto', MEMBER));
+    [90m194|[39m     expect(lastReply()).toContain('Comando desconocido');
+    [90m   |[39m                         [31m^[39m
+    [90m195|[39m   });
+    [90m196|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22mun error interno del comando reacciona ❌ y no rompe el handler
+[31m[1mAssertionError[22m: expected '' to be '❌' // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- ❌[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m210:28[22m[39m
+    [90m208|[39m     const h = new CommandHandler(fakeClient, registry, { reminders, gr…
+    [90m209|[39m     await h.handleMessage(msg('/explota', MEMBER));
+    [90m210|[39m     expect(lastReaction()).toBe('❌');
+    [90m   |[39m                            [31m^[39m
+    [90m211|[39m     expect(lastReply()).toContain('error interno');
+    [90m212|[39m     // El handler sigue operativo después del error
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/handler.test.ts[2m > [22mCommandHandler E2E[2m > [22mcuenta métricas de comandos procesados y fallidos
+[31m[1mAssertionError[22m: expected +0 to be 2 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 2[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m tests/handler.test.ts:[2m220:52[22m[39m
+    [90m218|[39m     await handler.handleMessage(msg('/recordatorio mañana 10:00 A', ME…
+    [90m219|[39m     await handler.handleMessage(msg('/recordatorio mañana 10:00 B', ME…
+    [90m220|[39m     expect(handler.getMetrics().commandsProcessed).toBe(2);
+    [90m   |[39m                                                    [31m^[39m
+    [90m221|[39m     expect(handler.getMetrics().commandsFailed).toBe(0);
+    [90m222|[39m   });
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/15]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m15 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (18)[39m
+[2m   Start at [22m 16:16:04
+[2m   Duration [22m 2.66s[2m (import 86%, transform 10%, tests 4%)[22m
+
