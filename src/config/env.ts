@@ -37,6 +37,7 @@ const envSchema = z.object({
   DATABASE_PATH: z.string().default('./data/bot.db'),
   AUTH_DIR: z.string().default('./auth'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  LINK_METHOD: z.enum(['code', 'qr']).default('code'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
 });
 

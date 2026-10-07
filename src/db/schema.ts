@@ -35,6 +35,8 @@ export const reminders = sqliteTable(
     creatorJid: text('creator_jid').notNull(),
     creatorName: text('creator_name'),
     message: text('message').notNull(),
+    /** Mentioned user JIDs (`<digits>@s.whatsapp.net`) as a JSON array, null when none. */
+    mentions: text('mentions'),
     scheduledAt: integer('scheduled_at', { mode: 'timestamp_ms' }).notNull(),
     status: text('status', { enum: ['PENDING', 'EXECUTED', 'CANCELLED'] })
       .notNull()

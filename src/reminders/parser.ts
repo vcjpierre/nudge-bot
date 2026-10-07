@@ -1,4 +1,5 @@
 import { fromZonedTime } from 'date-fns-tz';
+import { extractMentionDigits } from './mentions.js';
 
 /**
  * Parser de fecha/hora para el comando /recordatorio.
@@ -21,6 +22,12 @@ export class ParseError extends Error {
 export interface ParsedReminderInput {
   scheduledAt: Date;
   message: string;
+  mentions: string[];
+}
+
+/** Extract mentioned user JIDs from the message, preserving message text untouched. */
+export function extractMentions(message: string): string[] {
+  return extractMentionDigits(message).map((digits) => `${digits}@s.whatsapp.net`);
 }
 
 const TIME_REGEX = /^([01]?\d|2[0-3]):([0-5]\d)$/;
@@ -181,5 +188,5 @@ export function parseReminderInput(
   if (!message) {
     throw new ParseError('Falta el mensaje del recordatorio.');
   }
-  return { scheduledAt, message };
+  return { scheduledAt, message, mentions: extractMentions(message) };
 }

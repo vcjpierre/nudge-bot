@@ -1,5 +1,6 @@
 import { Boom } from '@hapi/boom';
 import {
+  Browsers,
   DisconnectReason,
   fetchLatestBaileysVersion,
   makeWASocket,
@@ -9,11 +10,21 @@ import {
   type WAMessage,
 } from 'baileys';
 import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import pino from 'pino';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { DisconnectAlerter } from './disconnect-alerts.js';
+
+const require = createRequire(import.meta.url);
+const qrcodeTerminal = require('qrcode-terminal') as {
+  generate: (input: string, opts?: { small: boolean }, callback?: (qrcode: string) => void) => void;
+};
+// generate() uses `this.error` internally, so it must stay bound to its
+// module object; a bare destructured reference throws "bad rs block".
+const printQRCode: typeof qrcodeTerminal.generate =
+  qrcodeTerminal.generate.bind(qrcodeTerminal);
 
 export type MessageHandler = (msg: WAMessage) => Promise<void>;
 
@@ -43,6 +54,8 @@ export class WhatsAppClient {
   private connecting: Promise<void> | null = null;
   private lastActivityAt = 0; // epoch ms de la última señal de vida del socket
   private watchdogTimer: NodeJS.Timeout | null = null;
+  private currentPairingCode: string | null = null;
+  private lastPrintedQR: string | null = null;
 
   /** Registra el handler de mensajes entrantes (llamar antes de connect). */
   onMessage(handler: MessageHandler): void {
@@ -63,6 +76,7 @@ export class WhatsAppClient {
   }
 
   private async doConnect(): Promise<void> {
+    this.closePreviousSocket();
     const { state, saveCreds } = await useMultiFileAuthState(env.AUTH_DIR);
     const { version } = await fetchLatestBaileysVersion();
     logger.info({ version: version.join('.') }, 'versión de WhatsApp Web obtenida');
@@ -72,7 +86,7 @@ export class WhatsAppClient {
       auth: state,
       logger: pino({ level: 'silent' }) as never,
       printQRInTerminal: false,
-      browser: ['nudge-bot', 'Chrome', '1.0.0'],
+      browser: Browsers.macOS('Desktop'),
       syncFullHistory: false,
       markOnlineOnConnect: false,
     });
@@ -96,10 +110,43 @@ export class WhatsAppClient {
       }
     });
 
-    // Primera ejecución: sin credenciales registradas -> pedir código de vinculación.
-    if (!state.creds.registered) {
-      await this.requestPairing(socket);
+    // First run in code mode: unregistered creds -> link with a pairing code.
+    // In qr mode this block is skipped; linking happens via the QR printed
+    // from the connection.update handler.
+    // Request a new code only when no valid code exists in this process;
+    // otherwise reuse it so reconnects (e.g. 428 transport close) do not
+    // invalidate the code the user is about to enter.
+    if (!state.creds.registered && env.LINK_METHOD === 'code') {
+      const persisted =
+        typeof state.creds.pairingCode === 'string' && state.creds.pairingCode.length > 0
+          ? state.creds.pairingCode
+          : null;
+      if (persisted) {
+        this.currentPairingCode = persisted;
+        logger.warn(
+          { pairingCode: persisted },
+          'Reusing active pairing code from disk; enter it in WhatsApp: Linked devices > Link with phone number',
+        );
+      } else if (this.currentPairingCode) {
+        logger.warn(
+          { pairingCode: this.currentPairingCode },
+          'Reusing active pairing code; enter it in WhatsApp: Linked devices > Link with phone number',
+        );
+      } else {
+        await this.requestPairing(socket);
+      }
     }
+  }
+
+  /** Close the previous socket before replacing it to avoid leaking listeners. */
+  private closePreviousSocket(): void {
+    if (!this.socket) return;
+    try {
+      this.socket.end(undefined);
+    } catch {
+      // Ignore close errors; the socket is being replaced anyway.
+    }
+    this.socket = null;
   }
 
   /**
@@ -141,9 +188,10 @@ export class WhatsAppClient {
     await socket.waitForSocketOpen().catch(() => undefined);
     try {
       const code = await socket.requestPairingCode(env.PHONE_NUMBER);
+      this.currentPairingCode = code;
       logger.warn(
         { pairingCode: code },
-        `VINCULACIÓN: en WhatsApp ve a Dispositivos vinculados > Vincular con número de teléfono e ingresa el código ${code}`,
+        `New pairing code generated; enter it in WhatsApp: Linked devices > Link with phone number: ${code}`,
       );
     } catch (error) {
       logger.error({ err: error }, 'no se pudo solicitar el código de vinculación');
@@ -151,14 +199,33 @@ export class WhatsAppClient {
   }
 
   private async handleConnectionUpdate(
-    update: { connection?: string; lastDisconnect?: { error?: Error } },
+    update: { connection?: string; lastDisconnect?: { error?: Error }; qr?: string },
     socket: WASocket,
   ): Promise<void> {
     const { connection, lastDisconnect } = update;
 
+    // QR linking flow: Baileys emits a fresh QR string while unregistered.
+    // Print each new one to the terminal so it can be scanned.
+    if (
+      env.LINK_METHOD === 'qr' &&
+      typeof update.qr === 'string' &&
+      update.qr.length > 0 &&
+      !socket.authState.creds.registered &&
+      update.qr !== this.lastPrintedQR
+    ) {
+      this.lastPrintedQR = update.qr;
+      printQRCode(update.qr, { small: true });
+      logger.warn(
+        'Scan the QR code above in WhatsApp: Linked devices > Link a device. ' +
+          'It expires in ~30s; a fresh code will be printed automatically.',
+      );
+    }
+
     if (connection === 'open') {
       this.reconnectDelay = MIN_RECONNECT_DELAY_MS;
       this.lastActivityAt = Date.now();
+      this.currentPairingCode = null;
+      this.lastPrintedQR = null;
       this.startWatchdog();
       logger.info({ user: socket.user?.id }, 'conectado a WhatsApp');
       return;
@@ -177,10 +244,22 @@ export class WhatsAppClient {
     logger.warn({ statusCode, reason }, 'conexión cerrada');
 
     if (statusCode === DisconnectReason.loggedOut) {
+      this.currentPairingCode = null;
+      this.lastPrintedQR = null;
       logger.error(
         `La sesión fue cerrada desde WhatsApp. Borra el directorio ${path.resolve(env.AUTH_DIR)} y vuelve a vincular el número.`,
       );
       this.stopping = true;
+      return;
+    }
+
+    const registered = socket.authState.creds.registered;
+    if (!registered) {
+      logger.warn(
+        { statusCode, reason },
+        'Transport closed while awaiting pairing; reconnecting transport without requesting a new pairing code',
+      );
+      this.scheduleReconnect();
       return;
     }
 

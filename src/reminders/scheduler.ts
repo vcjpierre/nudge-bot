@@ -3,7 +3,7 @@ import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { GroupService } from '../groups/service.js';
 import type { Reminder } from '../db/schema.js';
-import { ReminderService } from './service.js';
+import { ReminderService, mentionsHaveLabels, parseMentionRefs, parseMentions } from './service.js';
 
 export interface ReminderSender {
   /** Debe lanzar una excepción si el envío falla (para reintentar). */
@@ -86,10 +86,8 @@ export class ReminderScheduler {
         return;
       }
 
-      const text = reminder.creatorName
-        ? `⏰ Recordatorio para ${reminder.creatorName}: ${reminder.message}`
-        : `⏰ Recordatorio: ${reminder.message}`;
-      await this.sender.sendToGroup(reminder.groupJid, text, [reminder.creatorJid]);
+      const { text, mentions } = buildDeliveryText(reminder);
+      await this.sender.sendToGroup(reminder.groupJid, text, mentions);
 
       if (this.service.markExecuted(reminder.id)) {
         log.info('recordatorio enviado y marcado como EXECUTED');
@@ -101,6 +99,33 @@ export class ReminderScheduler {
       this.service.registerFailure(reminder.id);
     }
   }
+}
+
+/**
+ * Build the delivery text and mention list for a reminder.
+ *
+ * Reminders with resolved mentions (stored with display labels) tag the
+ * mentioned users by label: `⏰ Recordatorio para @A, @B: <body>`. The mention
+ * JIDs go in label order (positional mapping with the `@` tokens in text);
+ * the creator is appended last so it never shifts that mapping. Reminders
+ * without labels keep the legacy format untouched.
+ */
+export function buildDeliveryText(reminder: Reminder): { text: string; mentions: string[] } {
+  const refs = parseMentionRefs(reminder.mentions);
+  if (refs.length > 0 && mentionsHaveLabels(reminder.mentions)) {
+    const labels = refs.map((ref) => ref.label).join(', ');
+    const mentions = refs.map((ref) => ref.jid);
+    if (!mentions.includes(reminder.creatorJid)) mentions.push(reminder.creatorJid);
+    return { text: `⏰ Recordatorio para ${labels}: ${reminder.message}`, mentions };
+  }
+  const text = reminder.creatorName
+    ? `⏰ Recordatorio para ${reminder.creatorName}: ${reminder.message}`
+    : `⏰ Recordatorio: ${reminder.message}`;
+  const mentions = [reminder.creatorJid];
+  for (const jid of parseMentions(reminder.mentions)) {
+    if (!mentions.includes(jid)) mentions.push(jid);
+  }
+  return { text, mentions };
 }
 
 /** Formatea una fecha en la zona horaria indicada (o la global del bot). */

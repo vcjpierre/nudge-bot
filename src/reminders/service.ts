@@ -1,9 +1,96 @@
 import { and, asc, eq, isNull, lt, lte, or, sql } from 'drizzle-orm';
 import { db as defaultDb, type Db } from '../db/index.js';
 import { reminders, type Reminder } from '../db/schema.js';
+import { jidToPhone } from '../utils/jid.js';
+import type { MentionRef } from './mentions.js';
 
 /** Claims vencidos (la instancia murió a mitad de ejecución) se liberan tras este tiempo. */
 const CLAIM_TIMEOUT_MS = 5 * 60 * 1000;
+
+/** Display label fallback for a bare JID (`@` + phone digits, or `@` + JID). */
+function labelForJid(jid: string): string {
+  return `@${jidToPhone(jid) ?? jid}`;
+}
+
+/**
+ * Serialize mentions for the nullable `mentions` text column.
+ * Plain JIDs keep the legacy JSON string-array format; resolved
+ * `{jid, label}` refs are stored as a JSON object array.
+ */
+export function serializeMentions(mentions?: ReadonlyArray<string | MentionRef>): string | null {
+  if (!mentions || mentions.length === 0) return null;
+  if (mentions.every((m): m is string => typeof m === 'string')) {
+    return JSON.stringify(mentions);
+  }
+  const refs: MentionRef[] = [];
+  const seen = new Set<string>();
+  for (const m of mentions) {
+    const ref: MentionRef =
+      typeof m === 'string' ? { jid: m, label: labelForJid(m) } : m;
+    if (!ref.jid || seen.has(ref.jid)) continue;
+    seen.add(ref.jid);
+    refs.push({
+      jid: ref.jid,
+      label: ref.label && ref.label.length > 0 ? ref.label : labelForJid(ref.jid),
+    });
+  }
+  if (refs.length === 0) return null;
+  return JSON.stringify(refs);
+}
+
+/**
+ * Parse the nullable `mentions` column into `{jid, label}` refs (never throws).
+ * Reads the current object format and the legacy plain-JID array (labels are
+ * derived as `@digits` for the latter).
+ */
+export function parseMentionRefs(raw: string | null): MentionRef[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const refs: MentionRef[] = [];
+    for (const entry of parsed) {
+      if (typeof entry === 'string') {
+        if (entry.length === 0) continue;
+        refs.push({ jid: entry, label: labelForJid(entry) });
+      } else if (isStoredRef(entry)) {
+        const rawLabel: unknown = entry.label;
+        refs.push({
+          jid: entry.jid,
+          label: typeof rawLabel === 'string' && rawLabel.length > 0 ? rawLabel : labelForJid(entry.jid),
+        });
+      }
+    }
+    return refs;
+  } catch {
+    return [];
+  }
+}
+
+function isStoredRef(entry: unknown): entry is { jid: string; label?: unknown } {
+  return (
+    typeof entry === 'object' &&
+    entry !== null &&
+    typeof (entry as { jid?: unknown }).jid === 'string' &&
+    ((entry as { jid: string }).jid.length > 0)
+  );
+}
+
+/** True when the stored payload already carries display labels (object format). */
+export function mentionsHaveLabels(raw: string | null): boolean {
+  if (!raw) return false;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.some((entry) => isStoredRef(entry));
+  } catch {
+    return false;
+  }
+}
+
+/** Parse the nullable `mentions` text column back into JIDs (never throws). */
+export function parseMentions(raw: string | null): string[] {
+  return parseMentionRefs(raw).map((ref) => ref.jid);
+}
 
 export class ReminderService {
   constructor(private readonly db: Db = defaultDb) {}
@@ -14,6 +101,7 @@ export class ReminderService {
     creatorName: string | null;
     message: string;
     scheduledAt: Date;
+    mentions?: Array<string | MentionRef>;
   }): Reminder {
     const now = new Date();
     const row = this.db
@@ -23,6 +111,7 @@ export class ReminderService {
         creatorJid: input.creatorJid,
         creatorName: input.creatorName,
         message: input.message,
+        mentions: serializeMentions(input.mentions),
         scheduledAt: input.scheduledAt,
         status: 'PENDING',
         createdAt: now,
