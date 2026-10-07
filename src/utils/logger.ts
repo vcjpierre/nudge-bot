@@ -9,7 +9,7 @@ const isPretty = process.stdout.isTTY === true;
  */
 export const logger = pino({
   level: env.LOG_LEVEL,
-  base: { service: 'bot-wpp' },
+  base: { service: 'nudge-bot' },
   ...(isPretty
     ? {
         transport: {

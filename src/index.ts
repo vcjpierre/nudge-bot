@@ -16,7 +16,7 @@ import { WhatsAppClient } from './whatsapp/client.js';
  * Orden de apagado (SIGINT/SIGTERM): HTTP → scheduler → WhatsApp → DB.
  */
 async function main(): Promise<void> {
-  logger.info({ timezone: env.TIMEZONE }, 'iniciando bot-wpp');
+  logger.info({ timezone: env.TIMEZONE }, 'iniciando nudge-bot');
 
   runMigrations();
 

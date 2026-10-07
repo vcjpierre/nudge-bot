@@ -72,7 +72,7 @@ export class WhatsAppClient {
       auth: state,
       logger: pino({ level: 'silent' }) as never,
       printQRInTerminal: false,
-      browser: ['bot-wpp', 'Chrome', '1.0.0'],
+      browser: ['nudge-bot', 'Chrome', '1.0.0'],
       syncFullHistory: false,
       markOnlineOnConnect: false,
     });

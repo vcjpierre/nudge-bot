@@ -1,5 +1,5 @@
 {
-  "name": "bot-wpp",
+  "name": "nudge-bot",
   "version": "1.0.0",
   "description": "Bot de WhatsApp para grupos privados con recordatorios por comandos",
   "type": "module",

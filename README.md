@@ -1,4 +1,4 @@
-# bot-wpp
+# nudge-bot
 
 Bot de WhatsApp para **grupos privados** con sistema de recordatorios por comandos. Construido con TypeScript + Node.js + [Baileys](https://github.com/WhiskeySockets/Baileys), Drizzle ORM sobre SQLite, Zod, date-fns y Hono (health check).
 
