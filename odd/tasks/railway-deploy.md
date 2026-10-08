@@ -29,4 +29,4 @@ Baileys exige WebSocket siempre abierto + `AUTH_DIR` persistente. SQLite (`bette
 
 ## Progreso
 - 2026-10-08: documento creado.
-- 2026-10-08: T1–T4 completos — `pnpm typecheck` 0 errores, `pnpm build` ok, `pnpm test` 97/97 verde. Branch `feat/railway-deploy`. Falta: crear volumen + deploy en dashboard Railway.
+- 2026-10-08: T1–T4 completos — `pnpm typecheck` 0 errores, `pnpm build` ok, `pnpm test` 97/97 verde. Branch `feat/railway-deploy`, commit `9f7a072`. Falta: crear volumen + deploy en dashboard Railway.
