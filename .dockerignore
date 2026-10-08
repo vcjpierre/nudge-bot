@@ -1,0 +1,9 @@
+node_modules/
+dist/
+data/
+auth/
+.git/
+.env
+*.log
+coverage/
+.railway/
