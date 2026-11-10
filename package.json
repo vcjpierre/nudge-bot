@@ -41,7 +41,7 @@
     "@types/hapi__boom": "^9.0.1",
     "@types/node": "^26.6.4",
     "@types/qrcode-terminal": "^0.12.2",
-    "drizzle-kit": "^0.31.11",
+    "drizzle-kit": "^0.18.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"

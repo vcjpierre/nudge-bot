@@ -4,3 +4,4 @@ dist/
 data/
 auth/
 *.log
+.atl/
